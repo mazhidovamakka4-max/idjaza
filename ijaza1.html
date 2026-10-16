@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+  html,body{height:100%}
+  body{margin:0}
+  img{max-width:100%}
+  [hidden]{display:none!important}
+</style>
+<title>Таджвид тесті</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Amiri:wght@400;700&display=swap">
+<style>
+/* Layout: hub → topic quiz. centered single-column card; home shows two topics */
+:root{
+  --bg:#f3f1ea;
+  --surface:#ffffff;
+  --fg:#23312c;
+  --muted:#6b7a72;
+  --line:#e2ddd0;
+  --accent:#1f7a5c;       /* makhraj green */
+  --accent-soft:#e3f1ea;
+  --accent2:#b07a2b;      /* sifat gold (from slides) */
+  --accent2-soft:#f3e8d4;
+  --correct:#1f7a5c;
+  --correct-soft:#e3f1ea;
+  --wrong:#c0492f;
+  --wrong-soft:#f7e4df;
+  --shadow:0 6px 24px rgba(31,61,48,.08);
+  --radius:16px;
+  --maxw:640px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141a17; --surface:#1d2521; --fg:#e8ede9; --muted:#9aa8a1;
+  --line:#2c3833; --accent:#4fbf93; --accent-soft:#1c2f28;
+  --accent2:#d6a95c; --accent2-soft:#2c2316;
+  --correct:#4fbf93; --correct-soft:#1c2f28; --wrong:#e2735a; --wrong-soft:#33211c;
+  --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#141a17; --surface:#1d2521; --fg:#e8ede9; --muted:#9aa8a1;
+  --line:#2c3833; --accent:#4fbf93; --accent-soft:#1c2f28;
+  --accent2:#d6a95c; --accent2-soft:#2c2316;
+  --correct:#4fbf93; --correct-soft:#1c2f28; --wrong:#e2735a; --wrong-soft:#33211c;
+  --shadow:0 6px 24px rgba(0,0,0,.35); color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--fg);
+  font-family:"Manrope",system-ui,-apple-system,"Segoe UI",sans-serif;
+  line-height:1.5;-webkit-font-smoothing:antialiased;}
+.wrap{max-width:var(--maxw);margin:0 auto;padding-inline:16px;padding-block:28px 48px;
+  min-height:100%;display:flex;flex-direction:column;}
+.ar{font-family:"Amiri",serif;direction:rtl;unicode-bidi:isolate;}
+
+/* theme accent swap per topic */
+body[data-topic="sifat"]{--accent:var(--accent2);--accent-soft:var(--accent2-soft);--correct:var(--accent2);--correct-soft:var(--accent2-soft)}
+
+.top{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px}
+.brand{display:flex;align-items:center;gap:10px;min-width:0}
+.mark{width:34px;height:34px;border-radius:9px;background:var(--accent);color:#fff;
+  display:grid;place-items:center;font-family:"Amiri",serif;font-size:20px;flex:none}
+.brand b{font-weight:800;font-size:15px;letter-spacing:.2px;display:block}
+.brand span{display:block;font-size:11.5px;color:var(--muted);font-weight:600;letter-spacing:.4px;text-transform:uppercase}
+.theme-btn{border:1px solid var(--line);background:var(--surface);color:var(--muted);
+  border-radius:10px;width:38px;height:38px;cursor:pointer;font-size:16px;flex:none}
+
+.progress{height:7px;background:var(--line);border-radius:99px;overflow:hidden;margin-bottom:6px}
+.bar{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .35s ease}
+.pmeta{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);
+  font-weight:600;margin-bottom:20px;font-variant-numeric:tabular-nums}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);
+  box-shadow:var(--shadow);padding:24px 22px;flex:1 0 auto}
+
+/* home */
+.home h1{font-size:27px;font-weight:800;line-height:1.15;margin:2px 0 8px;text-wrap:balance}
+.home>p{color:var(--muted);margin:0 0 22px;font-size:15px}
+.topics{display:flex;flex-direction:column;gap:14px}
+.topic{display:flex;align-items:center;gap:15px;width:100%;text-align:left;cursor:pointer;
+  border:1.5px solid var(--line);background:var(--surface);color:var(--fg);
+  border-radius:15px;padding:18px;font-family:inherit;transition:border-color .15s,transform .1s}
+.topic:hover{border-color:var(--tc)}
+.topic:active{transform:scale(.99)}
+.ticon{width:52px;height:52px;border-radius:13px;flex:none;display:grid;place-items:center;
+  font-family:"Amiri",serif;font-size:27px;color:#fff;background:var(--tc)}
+.topic .tt{flex:1;min-width:0}
+.topic .tt b{display:block;font-size:17px;font-weight:800;margin-bottom:3px}
+.topic .tt small{color:var(--muted);font-size:13px;font-weight:600}
+.topic .chev{color:var(--muted);font-size:20px;flex:none}
+.t1{--tc:var(--accent)} .t2{--tc:var(--accent2)}
+
+/* question */
+.qnum{font-size:12px;font-weight:700;letter-spacing:.6px;text-transform:uppercase;
+  color:var(--accent);margin-bottom:8px}
+.qtext{font-size:20px;font-weight:700;line-height:1.35;margin:0 0 20px;text-wrap:balance}
+.qtext .ar{font-size:1.12em}
+.opts{display:flex;flex-direction:column;gap:11px}
+.opt{display:flex;align-items:center;gap:13px;width:100%;
+  border:1.5px solid var(--line);background:var(--surface);color:var(--fg);
+  border-radius:13px;padding:14px 15px;cursor:pointer;font-size:16px;font-weight:600;
+  font-family:inherit;transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt .lab{flex:none;width:28px;height:28px;border-radius:8px;background:var(--bg);
+  border:1px solid var(--line);display:grid;place-items:center;font-size:14px;font-weight:700;color:var(--muted)}
+.opt .txt{flex:1;min-width:0}
+.opt.correct{border-color:var(--correct);background:var(--correct-soft)}
+.opt.correct .lab{background:var(--correct);border-color:var(--correct);color:#fff}
+.opt.wrong{border-color:var(--wrong);background:var(--wrong-soft)}
+.opt.wrong .lab{background:var(--wrong);border-color:var(--wrong);color:#fff}
+.opt:disabled{cursor:default}
+.opt.dim{opacity:.5}
+
+.fb{margin-top:18px;border-radius:13px;padding:14px 16px;font-size:14.5px;line-height:1.5;
+  border:1px solid var(--line);background:var(--bg);display:none}
+.fb.show{display:block}
+.fb b{font-weight:800}
+.fb.ok b{color:var(--correct)} .fb.no b{color:var(--wrong)}
+
+.actions{margin-top:22px;display:flex;justify-content:space-between;align-items:center;gap:10px}
+.btn{border:none;border-radius:12px;background:var(--accent);color:#fff;font-family:inherit;
+  font-weight:700;font-size:15.5px;padding:13px 26px;cursor:pointer;transition:filter .15s}
+.btn:hover{filter:brightness(1.07)}
+.btn.block{width:100%;padding:15px;font-size:16px}
+.btn.ghost{background:transparent;color:var(--accent);border:1.5px solid var(--accent)}
+.btn.small{background:transparent;color:var(--muted);border:1.5px solid var(--line);padding:11px 16px;font-size:14px}
+
+.result{text-align:center}
+.ring{width:150px;height:150px;margin:6px auto 18px;position:relative}
+.ring svg{transform:rotate(-90deg)}
+.ring .pct{position:absolute;inset:0;display:grid;place-items:center;
+  font-weight:800;font-size:34px;font-variant-numeric:tabular-nums}
+.ring .pct small{display:block;font-size:12px;color:var(--muted);font-weight:600;margin-top:2px}
+.result h2{font-size:24px;font-weight:800;margin:0 0 6px}
+.result p{color:var(--muted);margin:0 0 22px;font-size:15px}
+.rbtns{display:flex;flex-direction:column;gap:11px}
+
+.analysis{margin:4px 0 22px;text-align:left}
+.analysis h3{font-size:14px;font-weight:800;letter-spacing:.3px;text-transform:uppercase;
+  color:var(--wrong);margin:0 0 12px}
+.miss{border:1px solid var(--line);border-left:3px solid var(--wrong);border-radius:11px;
+  padding:12px 14px;margin-bottom:10px;background:var(--bg)}
+.miss .mq{font-weight:700;font-size:14.5px;margin-bottom:8px;line-height:1.35}
+.miss .mrow{display:flex;gap:7px;align-items:baseline;font-size:13.5px;margin-top:3px}
+.miss .mrow .k{flex:none;color:var(--muted);font-weight:600;min-width:112px}
+.miss .mrow .v{min-width:0}
+.miss .mrow.bad .v{color:var(--wrong);font-weight:600}
+.miss .mrow.good .v{color:var(--correct);font-weight:700}
+.allok{border:1px solid var(--correct);background:var(--correct-soft);border-radius:11px;
+  padding:14px;text-align:center;font-weight:700;color:var(--correct);margin:4px 0 22px}
+
+.foot{text-align:center;color:var(--muted);font-size:12px;margin-top:22px}
+@media (max-width:420px){ .card{padding:20px 16px} .home h1{font-size:23px} .qtext{font-size:18px} }
+</style>
+</head>
+<body>
+
+
+<div class="wrap">
+  <div class="top">
+    <div class="brand">
+      <div class="mark ar" id="mark">ت</div>
+      <div><b id="btitle">Таджвид тесті</b><span id="bsub">Махраж · Сипат</span></div>
+    </div>
+    <button class="theme-btn" id="theme" aria-label="Тақырыпты ауыстыру">◐</button>
+  </div>
+
+  <div id="pbox" hidden>
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div class="pmeta"><span id="pcount"></span><span id="pscore"></span></div>
+  </div>
+
+  <div class="card" id="card"></div>
+
+  <div class="foot">Дұрыс жауаптан кейін түсіндірме шығады · қайта өтуге болады</div>
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const MAKHRAJ = [
+ {q:"Барлығы неше махраж бар?",o:["17","15","16","19"],c:0,e:"Кестеде барлығы 17 махраж көрсетілген."},
+ {q:"Жалпы махраждар тобы нешеу?",o:["5","3","4","6"],c:0,e:"5 топ: Тамақ және ауыз қуысы, Тамақ, Тіл, Екі ерін, Танау."},
+ {q:"«Тамақ және ауыз қуысы» тобына қай әріптер жатады?",o:["و - ا - ي","ش - ج - ي","م - ب - و","ص - ز - س","ء - ها"],c:0,e:"Созылу әріптері و - ا - ي.",ar:true},
+ {q:"«Тамақ және ауыз қуысы» тобының шығатын орны қайда?",o:["Тамақ және ауыз ішіндегі қуыс","Мұрын қуысының түбі","Жұтқыншақтың соңы","Екі еріннің арасы"],c:0,e:"و - ا - ي әріптері тамақ пен ауыз ішіндегі қуыстан шығады."},
+ {q:"«Тамақ» тобында неше махраж бар?",o:["3","2","4","5"],c:0,e:"Тамақтың соңы, ортасы, басы — 3 махраж."},
+ {q:"«Тамақтың соңы» тармағына қай әріптер жатады?",o:["ء - ها","ح - ع","غ - خ","ق"],c:0,e:"Тамақтың соңы — ء - ها.",ar:true},
+ {q:"ء - ها әріптерінің шығатын орны қайсысы?",o:["Жұтқыншақтың соңы","Жұтқыншақтың дәл өзі","Жұтқыншақтың тілшікке сәл жетпейтін жері","Мұрын қуысының түбі"],c:0,e:"Тамақтың соңы = жұтқыншақтың соңы."},
+ {q:"«Тамақтың ортасы» (ح - ع) шығатын орны қайсысы?",o:["Жұтқыншақтың дәл өзі","Жұтқыншақтың соңы","Жұтқыншақтың тілшікке сәл жетпейтін жері","Тілдің ортасы мен таңдай"],c:0,e:"Тамақтың ортасы = жұтқыншақтың дәл өзі."},
+ {q:"«Тамақтың басы» (غ - خ) шығатын орны қайда?",o:["Жұтқыншақтың тілшікке сәл жетпейтін жері","Жұтқыншақтың соңы","Жұтқыншақтың дәл өзі","Таңдайдың соңы"],c:0,e:"Тамақтың басы — жұтқыншақтың тілшікке сәл жетпейтін жері."},
+ {q:"«Тіл» тобында барлығы неше махраж бар?",o:["10","8","9","11"],c:0,e:"Тіл тобында 10 махраж бар."},
+ {q:"«Тіл» тобының тармақтары нешеу?",o:["4","3","5","2"],c:0,e:"Тілдің соңы, ортасы, жиегі, ұшы — 4 тармақ."},
+ {q:"ق әрпі қай тармаққа жатады?",o:["Тілдің соңы","Тілдің ортасы","Тілдің жиегі","Тілдің ұшы"],c:0,e:"ق — Тілдің соңы: тілдің соңы мен таңдайдың соңы."},
+ {q:"«Тілдің соңы» тармағындағы ك әрпінің шығатын орны қайсысы?",o:["Тілдің соңы мен таңдайдың соңы, қоф (ق) махражының сәл алды","Тілдің соңы мен таңдайдың соңы","Тілдің ортасы мен оның тұсындағы таңдай","Тілдің екі жиегі мен үстіңгі азу тістердің түбі"],c:0,e:"ك — қоф махражынан сәл алдырақ, таңдайдың соңында."},
+ {q:"«Тілдің ортасы» тармағының әріптері қайсысы?",o:["ش - ج - ي","ظ - ذ - ث","ص - ز - س","ط - د - ت"],c:0,e:"Тілдің ортасы — ش - ج - ي.",ar:true},
+ {q:"ض әрпінің шығатын орны қайда?",o:["Тілдің екі жиегі мен үстіңгі азу тістердің түбі","Тіл ұшының екі жиегі мен үстіңгі күрек тістердің қызыл еті","Тілдің ортасы мен таңдай","Тілдің ұшы мен үстіңгі күрек тістің ұшы"],c:0,e:"ض — Тілдің жиегі: тілдің екі жиегі мен үстіңгі азу тістердің түбі."},
+ {q:"ل әрпінің шығатын орны қайсысы?",o:["Тіл ұшының екі жиегі мен үстіңгі күрек тістердің қызыл еті","Тілдің екі жиегі мен үстіңгі азу тістердің түбі","Тілдің ұшы мен үстіңгі күрек тістің қызыл еті","Екі еріннің арасы"],c:0,e:"ل — тіл ұшының екі жиегі мен үстіңгі күрек тістердің қызыл еті."},
+ {q:"«Тілдің ұшы» тармағында неше махраж бар?",o:["5","3","4","6"],c:0,e:"ن, ر, (ط-د-ت), (ص-ز-س), (ظ-ذ-ث) — барлығы 5 махраж."},
+ {q:"ن мен ر әріптерінің шығатын орны қайсысы?",o:["Тілдің ұшы мен үстіңгі күрек тістің қызыл еті","Тілдің жалпақ ұшы мен үстіңгі күрек тістің түбі","Тілдің басы мен астыңғы күрек тістің ішкі тұсы","Мұрын қуысының түбі"],c:0,e:"ن мен ر — екеуі де тілдің ұшы мен үстіңгі күрек тістің қызыл етінен."},
+ {q:"ط - د - ت әріптерінің шығатын орны қайда?",o:["Тілдің жалпақ ұшы мен үстіңгі күрек тістің түбі","Тілдің басы мен астыңғы күрек тістің ішкі тұсы","Тілдің ұшы мен үстіңгі күрек тістің ұшы","Тілдің ұшы мен үстіңгі күрек тістің қызыл еті"],c:0,e:"ط - د - ت — тілдің жалпақ ұшы мен үстіңгі күрек тістің түбі."},
+ {q:"ص - ز - س әріптерінің шығатын орны қайсысы?",o:["Тілдің басы мен астыңғы күрек тістің ішкі тұсы","Тілдің жалпақ ұшы мен үстіңгі күрек тістің түбі","Тілдің ұшы мен үстіңгі күрек тістің ұшы","Тілдің екі жиегі мен үстіңгі азу тістердің түбі"],c:0,e:"ص - ز - س (ысқырық әріптері) — тілдің басы мен астыңғы күрек тістің ішкі тұсы."},
+ {q:"ظ - ذ - ث әріптерінің шығатын орны қайда?",o:["Тілдің ұшы мен үстіңгі күрек тістің ұшы","Тілдің басы мен астыңғы күрек тістің ішкі тұсы","Тілдің жалпақ ұшы мен үстіңгі күрек тістің түбі","Астыңғы еріннің ішкі жағы"],c:0,e:"ظ - ذ - ث — тілдің ұшы мен үстіңгі күрек тістің ұшы."},
+ {q:"«Екі ерін» тобында неше махраж бар?",o:["2","1","3","4"],c:0,e:"Астыңғы еріннің іші (ف) және екі еріннің арасы (م - ب - و) — екеу."},
+ {q:"«Астыңғы еріннің іші» тармағы (ف) шығатын орны қайсысы?",o:["Астыңғы еріннің ішкі жағы мен үстіңгі күрек тістің ұшы","Екі еріннің арасы","Тілдің ұшы мен үстіңгі күрек тістің ұшы","Мұрын қуысының түбі"],c:0,e:"ف — астыңғы еріннің ішкі жағы мен үстіңгі күрек тістің ұшы."},
+ {q:"«Екі еріннің арасы» тармағына қай әріптер жатады?",o:["م - ب - و","ف","و - ا - ي","ش - ج - ي"],c:0,e:"Екі еріннің арасы — م - ب - و.",ar:true},
+ {q:"Ғунна (اَلْغُنَّة) дыбысы қай топқа жатады және қайдан шығады?",o:["Танау — мұрын қуысының түбі","Екі ерін — екі еріннің арасы","Тіл — тілдің ұшы","Тамақ — жұтқыншақтың соңы"],c:0,e:"Ғунна (мұрын дыбысы) Танау тобына жатады, мұрын қуысының түбінен шығады."}
+];
+
+const SIFAT = [
+ {q:"Әріптің сипаттары негізінен неше топқа бөлінеді?",o:["2","3","4","5"],c:0,e:"Сипаттар ләзим (тұрақты) және әрдыйә (уақытша) болып 2 топқа бөлінеді."},
+ {q:"Ләзим (тұрақты) сипат дегеніміз не?",o:["Әріптен ешқандай жағдайда ажырамайтын, үнемі бірге жүретін сипат","Белгілі себептерге байланысты пайда болатын сипат","Тек сукун кезінде болатын сипат","Тек созылу әріптеріндегі сипат"],c:0,e:"Ләзим — әріптің бойынан ешқашан ажырамайтын тұрақты сипат."},
+ {q:"Әрдыйә (уақытша) сипат дегеніміз не?",o:["Белгілі бір себептерге байланысты пайда болып, кейде жоғалатын сипат","Әріппен үнемі бірге жүретін сипат","Антонимі бар сипат","Тек тіл әріптеріндегі сипат"],c:0,e:"Әрдыйә — кейбір жағдайларда пайда болып, басқа жағдайда жоғалатын уақытша сипат."},
+ {q:"Ғұламалар әрдыйә (уақытша) сипатты нешеге жатқызған?",o:["11","8","5","14"],c:0,e:"11 сипат: тафхим, тарқиқ, изһар, идғам, қалб, ихфа, мадд, қаср, тахрик, сукун, сакт."},
+ {q:"Ләзим сипаттар өз ішінде қалай бөлінеді?",o:["Антонимі бар және антонимі жоқ сипаттар","Тұрақты және уақытша","Күшті және әлсіз","Созылу және қысқа"],c:0,e:"Ләзим сипаттар: антонимі (қарама-қарсысы) бар және антонимі жоқ болып бөлінеді."},
+ {q:"Антонимі жоқ сипаттар нешеу?",o:["8","5","11","6"],c:0,e:"Қарама-қарсысы (антонимі) жоқ 8 сипат бар."},
+
+ {q:"Һәмс сипатының қарама-қарсысы (антонимі) қайсы?",o:["Жәһр","Рахауа","Истифәлә","Инфитах"],c:0,e:"Һәмс ↔ Жәһр — бір-біріне қарама-қарсы."},
+ {q:"Һәмс сипаты дегеніміз не?",o:["Дауыс екі шымылдығының ажырауы нәтижесінде ауаның сыртқа жүріп тұруы","Ауаның жүрмей тұншығып қалуы","Дыбыстың толық жалғасуы","Дыбыстың тұншығып тоқтауы"],c:0,e:"Һәмс — дауыс шымылдықтарының ажырауынан ауаның сыртқа еркін жүруі."},
+ {q:"Һәмс сипатының әріптері қайсы?",o:["ف ح ث ه ش خ ص س ك ت","أ ج د ق ط ب ك ت","خ ص ض غ ط ق ظ","ل ن ع م ر"],c:0,e:"Һәмс әріптері: فحثه شخص سكت (ف ح ث ه ش خ ص س ك ت).",ar:true},
+ {q:"Жәһр сипаты дегеніміз не?",o:["Дауыстың ішінен сыртқа жүрмей, тұншығып қалуы","Ауаның сыртқа еркін жүруі","Дыбыстың жоғары көтерілуі","Мұрыннан үндестіріп оқу"],c:0,e:"Жәһр — ауа жүрмей, дауыстың тұншығып қалуы (һәмстің қарсысы)."},
+
+ {q:"Шиддә сипаты дегеніміз не?",o:["Махраждың жабылуы себепті дыбыстың тұншығып тоқтап қалуы","Дыбыстың өз махражында толық жалғасуы","Ауаның сыртқа жүруі","Тілдің жоғары көтерілуі"],c:0,e:"Шиддә — махраж жабылып, дыбыстың тоқтап қалуы."},
+ {q:"Шиддә сипатының әріптері қайсы?",o:["أ ج د ق ط ب ك ت","خ ص ض غ ط ق ظ","ف ح ث ه ش خ ص س ك ت","ز س ص"],c:0,e:"Шиддә әріптері: أجد قط بكت.",ar:true},
+ {q:"Шиддә сипатының қарама-қарсысы қайсы?",o:["Рахауа","Жәһр","Инфитах","Истифәлә"],c:0,e:"Шиддә ↔ Рахауа."},
+ {q:"Рахауа сипаты дегеніміз не?",o:["Дыбыстың өз махражында толық жалғасып тұруы","Дыбыстың тұншығып тоқтауы","Ауаның тұншығуы","Тілдің қысылуы"],c:0,e:"Рахауа — дыбыстың махражында толық созылып, жалғасуы."},
+ {q:"Шиддә мен рахауаның ортасындағы (орта) сипат қалай аталады?",o:["Бәйнийә","Қалқала","Ғұнна","Лин"],c:0,e:"Бәйнийә — орта сипат: дыбыс жартылай жалғасады."},
+ {q:"Бәйнийә сипатының әріптері қайсы?",o:["ل ن ع م ر","أ ج د ق ط","ز س ص","ق ط ب ج د"],c:0,e:"Бәйнийә әріптері: لن عمر (ل ن ع م ر).",ar:true},
+
+ {q:"Истиғлә сипаты дегеніміз не?",o:["Дыбыстаған кезде дауыстың жоғары таңдайға қарай көтеріліп шығуы","Дауыстың төмен қарай құлауы","Ауаның сыртқа жүруі","Дыбыстың тоқтауы"],c:0,e:"Истиғлә — дауыстың жоғары таңдайға көтерілуі (жуандау)."},
+ {q:"Истиғлә сипатының әріптері қайсы?",o:["خ ص ض غ ط ق ظ","أ ج د ق ط ب ك ت","ص ض ط ظ","ل ن ع م ر"],c:0,e:"Истиғлә әріптері: خص ضغط قظ.",ar:true},
+ {q:"Истиғлә сипатының қарама-қарсысы қайсы?",o:["Истифәлә","Инфитах","Рахауа","Жәһр"],c:0,e:"Истиғлә ↔ Истифәлә."},
+ {q:"Истифәлә сипаты дегеніміз не?",o:["Дыбыстаған кезде дауыстың таңдайға қарай ентелемей, төмен қарай құлауы","Дауыстың жоғары көтерілуі","Дыбыстың тоқтауы","Тілдің қысылуы"],c:0,e:"Истифәлә — дауыс көтерілмей, төмен қарай түседі (жіңішкелеу)."},
+
+ {q:"Итбақ сипаты дегеніміз не?",o:["Тіл мен жоғарғы таңдайдың арасында дауыстың қысылуы","Дауыстың еркін шығуы","Ауаның сыртқа жүруі","Дыбыстың созылуы"],c:0,e:"Итбақ — тіл мен жоғарғы таңдай арасында дыбыстың қысылуы."},
+ {q:"Итбақ сипатының әріптері қайсы?",o:["ص ض ط ظ","خ ص ض غ ط ق ظ","ز س ص","ق ط ب ج د"],c:0,e:"Итбақ әріптері: ص ض ط ظ.",ar:true},
+ {q:"Итбақ сипатының қарама-қарсысы қайсы?",o:["Инфитах","Истифәлә","Рахауа","Һәмс"],c:0,e:"Итбақ ↔ Инфитах."},
+ {q:"Инфитах сипаты дегеніміз не?",o:["Тіл мен жоғарғы таңдай арасында дауыс қысылмай, еркін шығуы","Дауыстың қысылуы","Дауыстың тоқтауы","Мұрыннан оқу"],c:0,e:"Инфитах — тіл мен таңдай арасы ашық, дауыс еркін шығады."},
+
+ {q:"Сафир (ысқырық) сипатының әріптері қайсы?",o:["ز س ص","ق ط ب ج د","ي و","ل ر"],c:0,e:"Сафир — ысқырып оқылатын 3 әріп: ز س ص.",ar:true},
+ {q:"Қалқала сипаты дегеніміз не?",o:["Сукунмен дірілдеп, қатты оқылатын әріптер","Ысқырып оқылатын әріптер","Жұмсақ оқылатын әріптер","Мұрыннан оқылатын әріптер"],c:0,e:"Қалқала — сукун кезінде дірілдеп, серпіліп оқылады."},
+ {q:"Қалқала сипатының әріптері қайсы?",o:["ق ط ب ج د","ز س ص","ص ض ط ظ","ن م"],c:0,e:"Қалқала — 5 әріп: ق ط ب ج د.",ar:true},
+ {q:"Лин (жұмсақ) сипатының әріптері қайсы?",o:["ي و","ل ر","ن م","ز س ص"],c:0,e:"Лин — сукунды, алды фәтхалы و мен ي (2 әріп).",ar:true},
+ {q:"Инхираф сипатының әріптері қайсы?",o:["ل ر","ي و","ن م","ش"],c:0,e:"Инхираф — дыбыстың ауытқуы, 2 әріп: ل ر.",ar:true},
+ {q:"Тәкрир сипаты қай әріпте болады?",o:["ر","ش","ض","ن"],c:0,e:"Тәкрир — қайталанып оқылатын әріп: ر."},
+ {q:"Тәфәшши сипаты қай әріпте болады?",o:["ش","ر","ض","ص"],c:0,e:"Тәфәшши — кең тарап, жайылып оқылатын әріп: ش."},
+ {q:"Иститаля (иститоля) сипаты қай әріпте болады?",o:["ض","ش","ر","ط"],c:0,e:"Иститаля — созылып оқылатын әріп: ض."},
+ {q:"Ғұнна сипаты дегеніміз не және қай әріптерде болады?",o:["Мұрын арқылы үндестіріп оқу — ن мен م","Ысқырып оқу — ز с","Дірілдеп оқу — ق ط","Жұмсақ оқу — و ي"],c:0,e:"Ғұнна — мұрыннан үндестіріп оқу, әріптері: ن мен م.",ar:false},
+ {q:"ق әрпінің сипаттары қай қатарда дұрыс берілген?",o:["Жәһр, шиддә, истиғлә, инфитах, қалқала","Һәмс, рахауа, истифәлә, инфитах","Жәһр, рахауа, истиғлә, итбақ","Һәмс, шиддә, истифәлә, инфитах"],c:0,e:"ق — жәһр, шиддә, истиғлә, инфитах, қалқала."},
+ {q:"ر әрпіне тән арнайы (антонимі жоқ) сипаттар қайсы?",o:["Тәкрир және инхираф","Сафир және қалқала","Ғұнна және лин","Тәфәшши және иститаля"],c:0,e:"ر әрпінде тәкрир (қайталану) мен инхираф (ауытқу) болады."}
+];
+
+const TOPICS = {
+  makhraj:{name:"Махраж — шығу орны", sub:"Әріптердің шығатын орындары", mark:"ت", data:MAKHRAJ, accent:"makhraj"},
+  sifat:{name:"Сипаттар", sub:"Әріптердің сипаттары (صفات)", mark:"ص", data:SIFAT, accent:"sifat"}
+};
+const LABELS=["А","Ә","Б","В","Г"];
+
+/* ---------------- ENGINE ---------------- */
+const card=document.getElementById('card');
+const pbox=document.getElementById('pbox');
+const bar=document.getElementById('bar');
+const pcount=document.getElementById('pcount');
+const pscore=document.getElementById('pscore');
+const btitle=document.getElementById('btitle');
+const bsub=document.getElementById('bsub');
+const mark=document.getElementById('mark');
+let SET=[], idx=0, score=0, answered=false, topicKey=null, misses=[], mode="full";
+
+const root=document.documentElement;
+try{const t=localStorage.getItem('tj_theme'); if(t)root.setAttribute('data-theme',t);}catch(e){}
+document.getElementById('theme').onclick=()=>{
+  const cur=root.getAttribute('data-theme');
+  const dark=cur?cur==='dark':matchMedia('(prefers-color-scheme:dark)').matches;
+  const next=dark?'light':'dark';
+  root.setAttribute('data-theme',next);
+  try{localStorage.setItem('tj_theme',next);}catch(e){}
+};
+
+function esc(s){return String(s).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]));}
+function hasArabic(s){return /[؀-ۿ]/.test(s);}
+
+function home(){
+  topicKey=null;
+  document.body.removeAttribute('data-topic');
+  pbox.hidden=true;
+  btitle.textContent="Таджвид тесті";
+  bsub.textContent="Махраж · Сипат";
+  mark.textContent="ت";
+  card.innerHTML=`<div class="home">
+    <h1>Таджвид бойынша тест</h1>
+    <p>Тақырыпты таңдаңыз. Әр тест интерактивті — дұрыс/қате бірден көрінеді, соңында нәтиже шығады.</p>
+    <div class="topics">
+      <button class="topic t1" data-k="makhraj">
+        <div class="ticon">ت</div>
+        <div class="tt"><b>Махраж — шығу орны</b><small>17 махраж · 5 топ · ${MAKHRAJ.length} сұрақ</small></div>
+        <div class="chev">→</div>
+      </button>
+      <button class="topic t2" data-k="sifat">
+        <div class="ticon">ص</div>
+        <div class="tt"><b>Сипаттар (صفات)</b><small>Ләзим · әрдыйә · ${SIFAT.length} сұрақ</small></div>
+        <div class="chev">→</div>
+      </button>
+    </div>
+  </div>`;
+  [...card.querySelectorAll('.topic')].forEach(b=>b.onclick=()=>startTopic(b.dataset.k));
+}
+
+function startTopic(k){
+  topicKey=k;
+  const T=TOPICS[k];
+  document.body.setAttribute('data-topic',k==='sifat'?'sifat':'makhraj');
+  if(k!=='sifat') document.body.removeAttribute('data-topic');
+  btitle.textContent=T.name;
+  bsub.textContent=T.sub;
+  mark.textContent=T.mark;
+  runSet(T.data.slice(),"full");
+}
+
+function runSet(arr,m){
+  SET=arr.slice(); mode=m||"full";
+  idx=0;score=0;misses=[];
+  render();
+}
+
+function render(){
+  answered=false;
+  pbox.hidden=false;
+  const Q=SET[idx];
+  const order=Q.o.map((_,i)=>i);
+  for(let i=order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[order[i],order[j]]=[order[j],order[i]];}
+  bar.style.width=(idx/SET.length*100)+'%';
+  pcount.textContent=`Сұрақ ${idx+1} / ${SET.length}`;
+  pscore.textContent=`Дұрыс: ${score}`;
+  card.innerHTML=`
+    <div class="qnum">Сұрақ ${idx+1}</div>
+    <h2 class="qtext">${esc(Q.q)}</h2>
+    <div class="opts" id="opts"></div>
+    <div class="fb" id="fb"></div>
+    <div class="actions" id="act"></div>`;
+  const opts=document.getElementById('opts');
+  order.forEach((optIndex,pos)=>{
+    const b=document.createElement('button');
+    b.className='opt';
+    const useAr = Q.ar && hasArabic(Q.o[optIndex]);
+    const txtCls = useAr ? 'txt ar' : 'txt';
+    b.innerHTML=`<span class="lab">${LABELS[pos]}</span><span class="${txtCls}">${esc(Q.o[optIndex])}</span>`;
+    b.onclick=()=>choose(b,optIndex,Q,opts);
+    opts.appendChild(b);
+  });
+}
+
+function choose(btn,optIndex,Q,opts){
+  if(answered)return; answered=true;
+  const correct=optIndex===Q.c;
+  if(correct)score++;
+  [...opts.children].forEach(ch=>{ch.disabled=true;ch.classList.add('dim');});
+  [...opts.children].forEach(ch=>{
+    const t=ch.querySelector('.txt').textContent;
+    if(t===Q.o[Q.c]){ch.classList.remove('dim');ch.classList.add('correct');}
+  });
+  if(!correct){btn.classList.remove('dim');btn.classList.add('wrong');misses.push({Q,picked:optIndex});}
+  pscore.textContent=`Дұрыс: ${score}`;
+  const fb=document.getElementById('fb');
+  fb.className='fb show '+(correct?'ok':'no');
+  fb.innerHTML=`<b>${correct?'Дұрыс! ✓':'Қате ✗'}</b> — ${esc(Q.e)}`;
+  const act=document.getElementById('act');
+  const last=idx===SET.length-1;
+  act.innerHTML=`<button class="btn small" id="quit">← Тақырыптар</button>
+    <button class="btn" id="next">${last?'Нәтиже':'Келесі →'}</button>`;
+  document.getElementById('quit').onclick=home;
+  document.getElementById('next').onclick=()=>{ if(last){result();}else{idx++;render();} };
+}
+
+function result(){
+  bar.style.width='100%';
+  const pct=Math.round(score/SET.length*100);
+  const R=66, C=2*Math.PI*R, off=C*(1-pct/100);
+  const wrongQs=misses.slice();   // snapshot before any reset
+  let msg,sub;
+  if(pct>=90){msg="Тамаша! 🌟";sub="Бұл тақырыпты өте жақсы меңгергенсіз.";}
+  else if(pct>=70){msg="Жарайсыз! 👏";sub="Нәтиже жақсы, бірер жерді қайталаңыз.";}
+  else if(pct>=50){msg="Жаман емес";sub="Материалды тағы қарап, қайта өтіңіз.";}
+  else {msg="Қайталау керек";sub="Тақырыпты зерделеп, тағы бір рет өтіңіз.";}
+
+  let analysis;
+  if(wrongQs.length===0){
+    analysis=`<div class="allok">✓ Барлық сұраққа дұрыс жауап бердіңіз!</div>`;
+  } else {
+    const items=wrongQs.map(m=>{
+      const pickTxt=m.Q.o[m.picked], corrTxt=m.Q.o[m.Q.c];
+      const arP=m.Q.ar&&hasArabic(pickTxt)?' ar':'', arC=m.Q.ar&&hasArabic(corrTxt)?' ar':'';
+      return `<div class="miss">
+        <div class="mq">${esc(m.Q.q)}</div>
+        <div class="mrow bad"><span class="k">Сіздің жауабыңыз:</span><span class="v${arP}">${esc(pickTxt)}</span></div>
+        <div class="mrow good"><span class="k">Дұрыс жауап:</span><span class="v${arC}">${esc(corrTxt)}</span></div>
+      </div>`;
+    }).join('');
+    analysis=`<div class="analysis"><h3>Қате кеткен сұрақтар (${wrongQs.length})</h3>${items}</div>`;
+  }
+
+  card.innerHTML=`<div class="result">
+    <div class="ring">
+      <svg width="150" height="150" viewBox="0 0 150 150">
+        <circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--line)" stroke-width="12"/>
+        <circle cx="75" cy="75" r="${R}" fill="none" stroke="var(--accent)" stroke-width="12"
+          stroke-linecap="round" stroke-dasharray="${C}" stroke-dashoffset="${off}"/>
+      </svg>
+      <div class="pct">${pct}%<small>${score} / ${SET.length}</small></div>
+    </div>
+    <h2>${msg}</h2>
+    <p>${sub}</p>
+    </div>
+    ${analysis}
+    <div class="rbtns">
+      ${wrongQs.length?`<button class="btn block" id="retry">Қате сұрақтарды қайта өту (${wrongQs.length})</button>`:''}
+      <button class="btn ${wrongQs.length?'ghost ':''}block" id="again">Толық тестті қайта өту</button>
+      <button class="btn ghost block" id="other">← Басқа тақырып</button>
+    </div>`;
+  if(wrongQs.length){
+    document.getElementById('retry').onclick=()=>runSet(wrongQs.map(m=>m.Q),"retry");
+  }
+  document.getElementById('again').onclick=()=>startTopic(topicKey);
+  document.getElementById('other').onclick=home;
+}
+
+home();
+</script>
+
+</body>
+</html>
